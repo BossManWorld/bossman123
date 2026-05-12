@@ -1,0 +1,16 @@
+# Replace with your actual EC2 IP
+export EC2_IP=YOUR_PUBLIC_IP
+
+# Health check
+curl http://$EC2_IP:5000/api/health
+
+# Get all students
+curl http://$EC2_IP:5000/api/students
+
+# POST a new student
+curl -X POST http://$EC2_IP:5000/api/students \
+  -H 'Content-Type: application/json' \
+  -d '{"name": "Yahya", "grade": "A"}'
+
+# Test 404 case
+curl -i http://$EC2_IP:5000/api/students/999
