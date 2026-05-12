@@ -1,0 +1,107 @@
+# show current directory
+pwd
+
+# list files with permissions
+ls -la
+
+# create nested folders
+mkdir -p ~/devops/week8
+
+# create empty file
+touch app.py
+
+# write text to file (overwrites)
+echo "text" > file.txt
+
+# append text to file
+echo "text" >> file.txt
+
+# print file contents
+cat file.txt
+
+# delete folder permanently (no undo)
+rm -r foldername
+
+# copy folder recursively
+cp -r source/ dest/
+
+# move or rename
+mv old.txt new.txt
+
+# set permissions: rwx r-x r-x
+chmod 755 script.sh
+
+# set permissions: rw- --- ---
+chmod 600 secret.txt
+
+# SSH key permission (mandatory before SSH)
+chmod 400 ~/.ssh/devops-key.pem
+
+# add execute for owner
+chmod u+x script.sh
+
+# show all running processes
+ps aux
+
+# find specific process
+ps aux | grep python
+
+# kill process by PID
+kill 1234
+
+# force kill
+kill -9 1234
+
+# run in background survives terminal close
+nohup python3 app.py > app.log 2>&1 &
+
+# find and kill flask process
+kill $(ps aux | grep 'python3 app.py' | grep -v grep | awk '{print $2}')
+
+# find your IP address
+ip addr show | grep 'inet '
+
+# test internet connectivity
+ping -c 4 google.com
+
+# show all open ports
+ss -tulnp
+
+# check if port 5000 is open
+ss -tulnp | grep :5000
+
+# DNS lookup
+dig +short github.com
+
+# test API endpoint
+curl http://localhost:5000/api/health
+
+# watch log file live
+tail -f app.log
+
+# search for errors in log
+grep -i 'error' app.log
+
+# filter 404 errors
+grep '404' flask.log
+
+# disk usage
+df -h
+
+# memory usage
+free -h
+
+# system uptime and load
+uptime
+
+# systemd: start service
+sudo systemctl start flaskapp
+
+# systemd: enable on boot
+sudo systemctl enable flaskapp
+
+# systemd: check status
+sudo systemctl status flaskapp
+
+# systemd: live logs
+sudo journalctl -u flaskapp -f
