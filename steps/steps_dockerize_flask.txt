@@ -1,0 +1,25 @@
+GOAL: Build and run Flask app inside Docker container
+COMMANDS: see commands/docker.txt
+
+1. Make sure you have these 3 files in same folder:
+   - app.py       (see files/app.py)
+   - requirements.txt  (see files/requirements.txt)
+   - Dockerfile   (see files/Dockerfile)
+
+2. Build the image:
+   docker build -t flask-api:v1 .
+
+3. Run the container:
+   docker run -d -p 5000:5000 --restart=always --name flask-api flask-api:v1
+
+4. Verify it works:
+   docker ps
+   curl http://localhost:5000/api/health
+
+5. Check logs if something breaks:
+   docker logs -f flask-api
+
+6. If port conflict error:
+   docker stop flask-api || true
+   docker rm flask-api || true
+   (then run step 3 again)
