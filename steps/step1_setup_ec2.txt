@@ -1,0 +1,24 @@
+GOAL: Launch EC2 and SSH into it
+COMMANDS: see commands/aws.txt
+
+1. Go to console.aws.amazon.com → search EC2 → Launch Instance
+2. Name: yourname-devops-server
+3. AMI: Ubuntu Server 22.04 LTS (Free tier)
+4. Instance type: t2.micro (Free tier)
+5. Key pair: Create new → name: devops-key → RSA → .pem → Download
+6. Network settings → Edit:
+   - Allow SSH port 22 (My IP)
+   - Add rule: Custom TCP port 5000, source 0.0.0.0/0
+   - Add rule: Custom TCP port 80, source 0.0.0.0/0
+7. Launch Instance → wait 60s → copy Public IPv4 address
+
+8. On your local machine:
+   chmod 400 ~/.ssh/devops-key.pem
+   ssh -i ~/.ssh/devops-key.pem ubuntu@YOUR_PUBLIC_IP
+
+9. On EC2 after SSH:
+   sudo apt update && sudo apt upgrade -y
+   sudo apt install -y docker.io
+   sudo usermod -aG docker ubuntu
+   newgrp docker
+   docker --version
