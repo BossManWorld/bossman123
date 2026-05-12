@@ -1,0 +1,23 @@
+# install pytest
+pip3 install pytest
+
+# run all tests
+pytest
+
+# run specific test file
+pytest test_app.py
+
+# run with verbose output
+pytest -v
+
+# run with print statements visible
+pytest -s
+
+# run specific test function
+pytest test_app.py::test_health_check
+
+# install flask test client
+pip3 install pytest flask
+
+# generate requirements including pytest
+pip3 freeze > requirements.txt
