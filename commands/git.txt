@@ -1,0 +1,82 @@
+# configure git (run once)
+git config --global user.name "YourName"
+git config --global user.email "you@example.com"
+
+# initialize new repo
+git init
+
+# clone remote repo
+git clone https://github.com/user/repo.git
+
+# check status (run this constantly)
+git status
+
+# stage one file
+git add file.txt
+
+# stage everything
+git add .
+
+# commit with message
+git commit -m "describe change"
+
+# push to GitHub
+git push
+
+# first push + set upstream
+git push -u origin main
+
+# get latest from GitHub
+git pull
+
+# compact commit history
+git log --oneline
+
+# last 5 commits
+git log --oneline -5
+
+# show unstaged changes
+git diff
+
+# show staged changes
+git diff --staged
+
+# create and switch to new branch
+git switch -c feature-login
+
+# switch to existing branch
+git switch main
+
+# list all branches (* = current)
+git branch
+
+# push branch to GitHub
+git push origin feature-login
+
+# merge branch into current branch
+git merge feature-login
+
+# delete merged branch
+git branch -d feature-login
+
+# discard changes in working tree
+git restore filename
+
+# unstage a file
+git restore --staged filename
+
+# undo last commit, keep changes
+git reset --soft HEAD~1
+
+# cancel in-progress merge
+git merge --abort
+
+# connect local repo to GitHub
+git remote add origin https://github.com/user/repo.git
+
+# show connected remotes
+git remote -v
+
+# after merge conflict: stage fixed file
+git add conflicted-file.txt
+git commit -m "resolve merge conflict"
