@@ -1,0 +1,39 @@
+GOAL: Manually deploy Flask app on EC2 using Docker
+COMMANDS: see commands/aws.txt + commands/docker.txt
+
+1. SSH into EC2:
+   chmod 400 ~/.ssh/devops-key.pem
+   ssh -i ~/.ssh/devops-key.pem ubuntu@YOUR_PUBLIC_IP
+
+2. Get your code onto EC2 (choose one):
+   Option A - clone from GitHub:
+     git clone https://github.com/USERNAME/REPO.git
+     cd REPO
+
+   Option B - copy from local machine:
+     (run on LOCAL machine, not EC2)
+     scp -i ~/.ssh/devops-key.pem -r ~/project/ ubuntu@YOUR_IP:~/
+
+3. Build image on EC2:
+   docker build -t flask-api:v1 .
+
+4. Run container:
+   docker run -d -p 5000:5000 --restart=always --name flask-api flask-api:v1
+
+5. Verify on EC2:
+   docker ps
+   curl http://localhost:5000/api/health
+
+6. Verify from YOUR LOCAL machine:
+   curl http://YOUR_EC2_IP:5000/api/health
+   curl http://YOUR_EC2_IP:5000/api/students
+
+7. If container already exists error:
+   docker stop flask-api || true
+   docker rm flask-api || true
+   (rerun step 4)
+
+8. If app not reachable from internet:
+   → Check Security Group in AWS console has port 5000 open
+   → Check docker ps shows container is running
+   → Check curl localhost:5000 works from inside EC2
