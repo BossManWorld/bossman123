@@ -1,0 +1,73 @@
+# build image tagged flask-api:v1
+docker build -t flask-api:v1 .
+
+# build with Docker Hub tag
+docker build -t username/flask-api:latest .
+
+# run detached with port mapping
+docker run -d -p 5000:5000 --name flask-api flask-api:v1
+
+# run with auto-restart on crash or reboot
+docker run -d -p 5000:5000 --restart=always --name flask-api flask-api:v1
+
+# list running containers
+docker ps
+
+# list all containers including stopped
+docker ps -a
+
+# stop container
+docker stop flask-api
+
+# start stopped container
+docker start flask-api
+
+# restart container
+docker restart flask-api
+
+# delete container
+docker rm flask-api
+
+# stop and delete in one line
+docker stop flask-api && docker rm flask-api
+
+# list all images
+docker images
+
+# delete image
+docker rmi flask-api:v1
+
+# follow live logs
+docker logs -f flask-api
+
+# last 50 lines of logs
+docker logs --tail 50 flask-api
+
+# live CPU and memory stats
+docker stats flask-api
+
+# open shell inside running container
+docker exec -it flask-api bash
+
+# login to Docker Hub
+docker login
+
+# push image to Docker Hub
+docker push username/flask-api:latest
+
+# pull image from Docker Hub
+docker pull username/flask-api:latest
+
+# nuclear reset: stop, delete, redeploy
+docker stop flask-api || true
+docker rm flask-api || true
+docker run -d -p 5000:5000 --restart=always --name flask-api username/flask-api:latest
+
+# docker compose: start all services
+docker compose up -d
+
+# docker compose: stop all services
+docker compose down
+
+# docker compose: live logs
+docker compose logs -f
