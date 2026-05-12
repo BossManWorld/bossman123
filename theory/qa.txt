@@ -1,0 +1,77 @@
+Q: What is DevOps?
+A: Culture and practices that unite development and operations teams to build,
+   test, and deploy software faster and more reliably through automation.
+
+Q: What is CI/CD?
+A: CI = Continuous Integration: auto-tests code on every push.
+   CD = Continuous Delivery: auto-deploys tested code to server. No manual steps.
+
+Q: Docker container vs Virtual Machine?
+A: VM = full OS with own kernel, heavy, slow to start.
+   Container = shares host OS kernel, lightweight, starts in seconds, runs anywhere.
+
+Q: What is a Dockerfile?
+A: Text file with step-by-step instructions to build a Docker image.
+   FROM (base) → WORKDIR → COPY → RUN → EXPOSE → CMD
+
+Q: What does a GitHub Action do?
+A: Automated workflow triggered by events like git push.
+   Runs jobs on cloud VMs to test, build images, and deploy. Zero manual clicks.
+
+Q: What is a Docker image vs container?
+A: Image = blueprint (like a class). Container = running instance (like an object).
+
+Q: What is a REST API?
+A: Set of URLs that clients call using HTTP methods to perform CRUD operations.
+   GET=read, POST=create, PUT=update, DELETE=delete.
+
+Q: What are HTTP status codes?
+A: 2xx = success (200 OK, 201 Created)
+   4xx = client error (400 Bad Request, 404 Not Found)
+   5xx = server error (500 Internal Server Error)
+
+Q: What is CORS?
+A: Browser security policy blocking requests from different origins/ports.
+   Fix: pip install flask-cors, then CORS(app) in app.py.
+
+Q: What is a Git branch?
+A: Isolated copy of code where you can make changes without affecting main.
+   Merge back when feature is complete and tested.
+
+Q: What is a merge conflict?
+A: Happens when two branches edit the same lines of the same file.
+   Git marks it with <<<, ===, >>> markers. You manually choose correct version.
+
+Q: What is nohup?
+A: "No hangup" — keeps a process running even after terminal is closed.
+   nohup python3 app.py > app.log 2>&1 &
+
+Q: What does --restart=always do in Docker?
+A: Container auto-restarts if it crashes or if the EC2 server reboots.
+
+Q: What is a Security Group in AWS?
+A: Virtual firewall for your EC2 instance controlling which ports are open.
+   Must open port 22 (SSH) and port 5000 (Flask) for exam.
+
+Q: What is systemd / systemctl?
+A: Linux service manager. Starts apps on boot, restarts on crash, manages logs.
+
+Q: What is the difference between CMD and RUN in Dockerfile?
+A: RUN executes during image BUILD (install packages, copy files).
+   CMD executes when CONTAINER STARTS (run the app).
+
+Q: What does 2>&1 mean?
+A: Redirects stderr (error output, stream 2) into stdout (stream 1).
+   So both normal output and errors go to the same log file.
+
+Q: What is docker ps vs docker ps -a?
+A: docker ps = only running containers.
+   docker ps -a = ALL containers including stopped ones.
+
+Q: What is git pull vs git fetch?
+A: git pull = download + merge remote changes into your branch.
+   git fetch = download only, does NOT merge. You review before merging.
+
+Q: What is EC2?
+A: Elastic Compute Cloud — AWS virtual machine service.
+   t2.micro = free tier (1 vCPU, 1GB RAM, 750 hrs/month free).
