@@ -1,0 +1,31 @@
+GOAL: Auto-deploy to EC2 on every git push
+COMMANDS: see commands/git.txt + commands/docker.txt
+
+PRE-REQUISITES:
+- Docker Hub account at hub.docker.com
+- EC2 running with Docker installed (see step1)
+- GitHub repo with your Flask project
+
+1. Add 4 secrets to GitHub repo:
+   Repo → Settings → Secrets and variables → Actions → New repository secret
+   DOCKERHUB_USERNAME  = your Docker Hub username
+   DOCKERHUB_TOKEN     = Docker Hub access token (hub.docker.com → Account → Security)
+   EC2_HOST            = your EC2 public IP
+   EC2_SSH_KEY         = full contents of devops-key.pem file (paste everything)
+
+2. Create workflow file at EXACT path: .github/workflows/ci.yml
+   (copy content from files/ci.yml)
+
+3. Push to main to trigger pipeline:
+   git add .
+   git commit -m "add CI/CD pipeline"
+   git push
+
+4. Watch pipeline run:
+   GitHub repo → Actions tab → click latest run
+   Green = success, Red = failed (click to see error)
+
+5. If pipeline fails:
+   "Permission denied (publickey)" = wrong EC2_SSH_KEY content
+   "port already allocated" = run docker stop/rm first
+   workflow not triggering = check file is in .github/workflows/ not root
