@@ -1,0 +1,57 @@
+# fix key permissions (MUST do before SSH)
+chmod 400 ~/.ssh/devops-key.pem
+
+# SSH into EC2 instance
+ssh -i ~/.ssh/devops-key.pem ubuntu@YOUR_PUBLIC_IP
+
+# update server (run first on fresh EC2)
+sudo apt update && sudo apt upgrade -y
+
+# install Docker on EC2
+sudo apt install -y docker.io
+sudo usermod -aG docker ubuntu
+newgrp docker
+
+# verify Docker installed
+docker --version
+
+# copy file from local to EC2
+scp -i ~/.ssh/devops-key.pem app.py ubuntu@YOUR_IP:~/
+
+# copy entire folder from local to EC2
+scp -i ~/.ssh/devops-key.pem -r ~/devops/week5/ ubuntu@YOUR_IP:~/flask-api/
+
+# clone repo onto EC2
+git clone https://github.com/username/repo.git
+
+# build image on EC2
+docker build -t flask-api:v1 .
+
+# run container on EC2
+docker run -d -p 5000:5000 --restart=always --name flask-api flask-api:v1
+
+# verify container running
+docker ps
+
+# verify port open
+ss -tulnp | grep :5000
+
+# test API from EC2 itself
+curl http://localhost:5000/api/health
+
+# test API from your local machine
+curl http://YOUR_EC2_IP:5000/api/health
+
+# post new student from local machine
+curl -X POST http://YOUR_EC2_IP:5000/api/students \
+  -H 'Content-Type: application/json' \
+  -d '{"name": "Yahya", "grade": "A"}'
+
+# check server resources
+free -h && df -h && uptime
+
+# reboot EC2 instance
+sudo reboot
+
+# after reboot: verify container auto-started
+docker ps
