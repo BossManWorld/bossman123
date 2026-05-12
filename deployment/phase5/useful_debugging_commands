@@ -1,0 +1,15 @@
+# See live container logs
+docker logs -f flask-api
+
+# Check port is actually open
+ss -tulnp | grep :5000
+
+# Restart a container
+docker restart flask-api
+
+# Nuclear option: kill and rerun
+docker stop flask-api && docker rm flask-api
+docker run -d -p 5000:5000 --restart=always --name flask-api YOUR_USERNAME/flask-api:latest
+
+# Check server resources
+free -h && df -h && uptime
