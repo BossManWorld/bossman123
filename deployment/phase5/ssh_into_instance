@@ -1,0 +1,5 @@
+# Fix key permissions first (mandatory, SSH will reject without this)
+chmod 400 ~/.ssh/devops-key.pem
+
+# Connect
+ssh -i ~/.ssh/devops-key.pem ubuntu@YOUR_PUBLIC_IP
