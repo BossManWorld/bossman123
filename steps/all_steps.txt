@@ -1,0 +1,568 @@
+================================================================================
+   DEVOPS EXAM - COMPLETE GUIDE - EVERYTHING IN ONE FILE
+   EC2 IP: 13.60.77.127
+   GitHub: https://github.com/BossManWorld/bossman123
+================================================================================
+
+FOLDER STRUCTURE TO CREATE ON UBUNTU:
+~/devops/flask-api/
+    app.py
+    requirements.txt
+    Dockerfile
+    docker-compose.yml
+    .dockerignore
+    test_app.py
+    .github/
+        workflows/
+            ci.yml
+
+================================================================================
+PHASE 1 - OPEN VS CODE AND CREATE PROJECT FOLDER
+================================================================================
+
+mkdir -p ~/devops/flask-api
+cd ~/devops/flask-api
+code .
+
+(VS Code opens. Right-click left panel > New File to create each file below)
+(Use Ctrl+` to open terminal inside VS Code)
+
+================================================================================
+PHASE 2 - CREATE ALL FILES (copy paste each block into VS Code)
+================================================================================
+
+--- FILE: requirements.txt ---
+flask==3.0.0
+flask-cors==4.0.0
+pytest==7.4.0
+
+
+--- FILE: Dockerfile ---
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+EXPOSE 5000
+CMD ["python", "app.py"]
+
+
+--- FILE: .dockerignore ---
+__pycache__/
+*.pyc
+.env
+*.log
+venv/
+.git
+
+
+--- FILE: docker-compose.yml ---
+version: '3'
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    restart: always
+    container_name: flask-api
+
+
+--- FILE: app.py ---
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app)
+
+students = [
+    {"id": 1, "name": "Alice", "grade": "A"},
+    {"id": 2, "name": "Bob", "grade": "B"},
+]
+next_id = 3
+
+@app.route("/api/health")
+def health():
+    return jsonify({"status": "ok", "message": "Flask is running"}), 200
+
+@app.route("/api/students", methods=["GET"])
+def get_students():
+    return jsonify(students), 200
+
+@app.route("/api/students/<int:sid>", methods=["GET"])
+def get_student(sid):
+    s = next((s for s in students if s["id"] == sid), None)
+    return (jsonify(s), 200) if s else (jsonify({"error": "Not found"}), 404)
+
+@app.route("/api/students", methods=["POST"])
+def add_student():
+    global next_id
+    data = request.get_json()
+    if not data or "name" not in data or "grade" not in data:
+        return jsonify({"error": "name and grade required"}), 400
+    new = {"id": next_id, "name": data["name"], "grade": data["grade"]}
+    students.append(new)
+    next_id += 1
+    return jsonify(new), 201
+
+@app.route("/api/students/<int:sid>", methods=["PUT"])
+def update_student(sid):
+    s = next((s for s in students if s["id"] == sid), None)
+    if not s:
+        return jsonify({"error": "Not found"}), 404
+    data = request.get_json()
+    s["name"] = data.get("name", s["name"])
+    s["grade"] = data.get("grade", s["grade"])
+    return jsonify(s), 200
+
+@app.route("/api/students/<int:sid>", methods=["DELETE"])
+def delete_student(sid):
+    global students
+    before = len(students)
+    students = [s for s in students if s["id"] != sid]
+    if len(students) == before:
+        return jsonify({"error": "Not found"}), 404
+    return jsonify({"message": "Deleted"}), 200
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=False)
+
+
+--- FILE: test_app.py ---
+import pytest
+from app import app
+
+@pytest.fixture
+def client():
+    app.config["TESTING"] = True
+    with app.test_client() as client:
+        yield client
+
+def test_health_check(client):
+    res = client.get("/api/health")
+    assert res.status_code == 200
+    assert res.get_json()["status"] == "ok"
+
+def test_get_all_students(client):
+    res = client.get("/api/students")
+    assert res.status_code == 200
+    assert isinstance(res.get_json(), list)
+
+def test_get_student_found(client):
+    res = client.get("/api/students/1")
+    assert res.status_code == 200
+
+def test_get_student_not_found(client):
+    res = client.get("/api/students/999")
+    assert res.status_code == 404
+
+def test_add_student(client):
+    res = client.post("/api/students",
+        json={"name": "Ali", "grade": "A"})
+    assert res.status_code == 201
+    assert res.get_json()["name"] == "John"
+
+def test_add_student_missing_field(client):
+    res = client.post("/api/students",
+        json={"name": "John"})
+    assert res.status_code == 400
+
+
+--- FILE: .github/workflows/ci.yml ---
+(First run in terminal: mkdir -p .github/workflows)
+(Then create this file inside that folder in VS Code)
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run tests
+        run: |
+          pip install flask flask-cors pytest
+          pytest test_app.py -v
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/flask-api:latest
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/flask-api:latest
+            docker stop flask-api || true
+            docker rm flask-api || true
+            docker run -d -p 5000:5000 --restart=always \
+              --name flask-api \
+              ${{ secrets.DOCKERHUB_USERNAME }}/flask-api:latest
+            docker ps
+
+
+================================================================================
+PHASE 3 - TEST FLASK RUNS LOCALLY
+================================================================================
+
+pip3 install -r requirements.txt
+python3 app.py
+
+(Open second terminal tab with + button)
+curl http://localhost:5000/api/health
+curl http://localhost:5000/api/students
+
+(Go back to first terminal > Ctrl+C to stop Flask)
+
+
+================================================================================
+PHASE 4 - RUN PYTEST
+================================================================================
+
+pytest test_app.py -v
+
+(All tests should show green PASSED)
+(If import error: pip3 install flask flask-cors pytest)
+
+
+================================================================================
+PHASE 5 - BUILD AND RUN WITH DOCKER LOCALLY
+================================================================================
+
+docker build -t flask-api:v1 .
+
+docker run -d -p 5000:5000 --restart=always --name flask-api flask-api:v1
+
+docker ps
+
+curl http://localhost:5000/api/health
+curl http://localhost:5000/api/students
+
+docker logs -f flask-api
+
+(If port already in use error:)
+docker stop flask-api || true
+docker rm flask-api || true
+(then rerun docker run command)
+
+
+================================================================================
+PHASE 6 - PUSH TO GITHUB
+================================================================================
+
+git init
+
+git config --global user.name "YourName"
+git config --global user.email "you@email.com"
+
+echo "__pycache__/" > .gitignore
+echo "*.pyc" >> .gitignore
+echo ".env" >> .gitignore
+echo "*.log" >> .gitignore
+
+git add .
+git status
+git commit -m "Initial commit: Flask CRUD API with Docker"
+
+git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
+git branch -M main
+git push -u origin main
+
+(When asked for password: paste your GitHub PAT token)
+
+
+================================================================================
+PHASE 7 - ADD GITHUB SECRETS FOR CI/CD
+================================================================================
+
+Go to: GitHub repo > Settings > Secrets and variables > Actions > New repository secret
+
+Add these 4 secrets:
+
+Name: DOCKERHUB_USERNAME
+Value: your docker hub username
+
+Name: DOCKERHUB_TOKEN
+Value: go to hub.docker.com > Account Settings > Security > New Access Token > copy it
+
+Name: EC2_HOST
+Value: 13.60.77.127
+
+Name: EC2_SSH_KEY
+Value: open devops-key.pem in VS Code > Ctrl+A > Ctrl+C > paste here
+       (must include -----BEGIN RSA PRIVATE KEY----- and -----END RSA PRIVATE KEY-----)
+
+
+================================================================================
+PHASE 8 - TRIGGER CI/CD PIPELINE
+================================================================================
+
+echo "# Flask API" >> README.md
+git add README.md
+git commit -m "trigger CI/CD pipeline"
+git push
+
+(Go to GitHub > Actions tab > watch pipeline run)
+(Green checkmark = success = app is live on EC2)
+(Red X = failed > click it > read error > fix below)
+
+
+================================================================================
+PHASE 9 - SSH INTO EC2 AND VERIFY
+================================================================================
+
+chmod 400 ~/.ssh/devops-key.pem
+ssh -i ~/.ssh/devops-key.pem ubuntu@13.60.77.127
+
+(Now you are inside EC2. Run these:)
+docker ps
+ss -tulnp | grep :5000
+curl http://localhost:5000/api/health
+
+(Type exit to leave EC2)
+
+
+================================================================================
+PHASE 10 - VERIFY LIVE FROM YOUR LOCAL UBUNTU MACHINE
+================================================================================
+
+curl http://13.60.77.127:5000/api/health
+
+curl http://13.60.77.127:5000/api/students
+
+curl -X POST http://13.60.77.127:5000/api/students \
+  -H 'Content-Type: application/json' \
+  -d '{"name": "John", "grade": "A"}'
+
+curl http://13.60.77.127:5000/api/students
+
+(If you get JSON back = FULL MARKS YOU ARE DONE)
+
+
+================================================================================
+IF SOMETHING BREAKS - FIX IT HERE
+================================================================================
+
+--- Port already in use ---
+docker stop flask-api || true
+docker rm flask-api || true
+docker run -d -p 5000:5000 --restart=always --name flask-api flask-api:v1
+
+--- App not reachable from internet ---
+Go to AWS Console > EC2 > Security Groups
+Add inbound rule: Custom TCP, Port 5000, Source 0.0.0.0/0
+Add inbound rule: Custom TCP, Port 80, Source 0.0.0.0/0
+
+--- Pipeline not triggering ---
+Check ci.yml is at .github/workflows/ci.yml (not root folder)
+
+--- SSH permission denied ---
+chmod 400 ~/.ssh/devops-key.pem
+
+--- EC2_SSH_KEY secret wrong ---
+Open devops-key.pem in VS Code
+Select everything Ctrl+A
+Copy Ctrl+C
+Paste into GitHub secret field
+
+--- Tests failing ---
+Check app.py has /api/health route
+pip3 install flask flask-cors pytest
+
+--- Docker not found on EC2 ---
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y docker.io
+sudo usermod -aG docker ubuntu
+newgrp docker
+
+--- Git push asks for password ---
+Use your GitHub PAT token not your account password
+
+
+================================================================================
+MANUAL DEPLOY ON EC2 (if pipeline fails, do this manually)
+================================================================================
+
+(Step 1: SSH in)
+chmod 400 ~/.ssh/devops-key.pem
+ssh -i ~/.ssh/devops-key.pem ubuntu@13.60.77.127
+
+(Step 2: Install Docker if not there)
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y docker.io
+sudo usermod -aG docker ubuntu
+newgrp docker
+
+(Step 3: Get your code - choose one option)
+OPTION A - Clone from GitHub:
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+cd YOUR_REPO
+
+OPTION B - Copy from local machine (run on LOCAL not EC2):
+scp -i ~/.ssh/devops-key.pem -r ~/devops/flask-api/ ubuntu@13.60.77.127:~/
+
+(Step 4: Build and run)
+docker build -t flask-api:v1 .
+docker stop flask-api || true
+docker rm flask-api || true
+docker run -d -p 5000:5000 --restart=always --name flask-api flask-api:v1
+
+(Step 5: Verify)
+docker ps
+curl http://localhost:5000/api/health
+
+
+================================================================================
+QUICK COMMAND REFERENCE
+================================================================================
+
+--- DOCKER ---
+docker build -t flask-api:v1 .
+docker run -d -p 5000:5000 --restart=always --name flask-api flask-api:v1
+docker ps
+docker ps -a
+docker stop flask-api
+docker start flask-api
+docker restart flask-api
+docker rm flask-api
+docker logs -f flask-api
+docker stats flask-api
+docker exec -it flask-api bash
+docker images
+docker rmi flask-api:v1
+docker login
+docker push username/flask-api:latest
+docker pull username/flask-api:latest
+docker compose up -d
+docker compose down
+docker compose logs -f
+
+--- GIT ---
+git init
+git status
+git add .
+git commit -m "message"
+git push
+git pull
+git log --oneline -5
+git switch -c feature-branch
+git switch main
+git merge feature-branch
+git branch -d feature-branch
+git push origin feature-branch
+git remote add origin https://github.com/user/repo.git
+git push -u origin main
+git restore filename
+git reset --soft HEAD~1
+git merge --abort
+
+--- LINUX ---
+pwd
+ls -la
+mkdir -p ~/devops/flask-api
+cd ~/devops/flask-api
+touch file.txt
+cat file.txt
+rm -r foldername
+cp -r source/ dest/
+chmod 400 ~/.ssh/devops-key.pem
+chmod 755 script.sh
+ps aux | grep python
+kill -9 PID
+nohup python3 app.py > app.log 2>&1 &
+kill $(ps aux | grep 'python3 app.py' | grep -v grep | awk '{print $2}')
+ip addr show | grep 'inet '
+ss -tulnp | grep :5000
+curl http://localhost:5000/api/health
+tail -f app.log
+df -h
+free -h
+uptime
+
+--- PYTEST ---
+pip3 install pytest
+pytest test_app.py -v
+pytest test_app.py -s
+pytest test_app.py::test_health_check
+
+--- AWS / EC2 ---
+chmod 400 ~/.ssh/devops-key.pem
+ssh -i ~/.ssh/devops-key.pem ubuntu@13.60.77.127
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y docker.io
+sudo usermod -aG docker ubuntu
+newgrp docker
+scp -i ~/.ssh/devops-key.pem file.py ubuntu@13.60.77.127:~/
+scp -i ~/.ssh/devops-key.pem -r ~/project/ ubuntu@13.60.77.127:~/
+
+
+================================================================================
+THEORY QUICK ANSWERS
+================================================================================
+
+CI/CD:
+CI = auto-tests code on every push
+CD = auto-deploys tested code to server, no manual steps
+
+Docker container vs VM:
+VM = full OS with own kernel, heavy, slow
+Container = shares host OS kernel, lightweight, starts in seconds
+
+Dockerfile:
+Text file with instructions to build Docker image
+FROM > WORKDIR > COPY > RUN > EXPOSE > CMD
+
+GitHub Actions:
+Automated workflow triggered by git push
+Runs jobs on cloud VMs to test, build, deploy
+
+REST API methods:
+GET = read, POST = create, PUT = update, DELETE = delete
+
+HTTP status codes:
+200 = OK, 201 = Created, 400 = Bad Request, 404 = Not Found, 500 = Server Error
+
+nohup:
+Keeps process running after terminal closes
+nohup python3 app.py > app.log 2>&1 &
+
+--restart=always:
+Docker container auto-restarts if it crashes or EC2 reboots
+
+Security Group:
+AWS virtual firewall controlling which ports are open on EC2
+
+systemctl:
+Linux service manager, starts apps on boot, restarts on crash
+
+CMD vs RUN in Dockerfile:
+RUN = executes during image BUILD (install packages)
+CMD = executes when CONTAINER STARTS (run the app)
+
+2>&1 meaning:
+Redirects stderr (errors) into stdout so both go to same log file
+
+git pull vs git fetch:
+pull = download + merge automatically
+fetch = download only, you merge manually
+
+================================================================================
+================================================================================
