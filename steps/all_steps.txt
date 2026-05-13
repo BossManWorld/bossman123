@@ -1,6 +1,5 @@
 ================================================================================
-   DEVOPS EXAM - COMPLETE GUIDE - EVERYTHING IN ONE FILE
-   EC2 IP: 13.60.77.127
+   EC2 IP: yourip
    GitHub: https://github.com/BossManWorld/bossman123
 ================================================================================
 
@@ -66,6 +65,31 @@ services:
     restart: always
     container_name: flask-api
 
+================================================================================
+IF EXAM GIVES YOU A FLASK APP (don't write your own)
+================================================================================
+
+(They give you app.py already - just add these missing files)
+
+1. Check what routes exist in their app.py:
+   cat app.py
+
+2. Create requirements.txt based on their imports:
+   flask==3.0.0
+   flask-cors==4.0.0
+   pytest==7.4.0
+
+3. Dockerfile stays exactly the same - copy from above
+
+4. For test_app.py - check their route names and adjust:
+   - Change /api/students to whatever route they have
+   - Keep test structure the same
+
+5. Continue from Phase 5 (Docker build) - skip Phase 3 and 4
+   unless they ask you to run tests
+
+(Everything else - Docker, GitHub, CI/CD, EC2 - stays identical)
+================================================================================
 
 --- FILE: app.py ---
 from flask import Flask, jsonify, request
