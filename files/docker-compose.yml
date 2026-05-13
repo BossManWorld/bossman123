@@ -1,0 +1,57 @@
+# docker-compose.yml
+# Full-stack: Flask API + nginx frontend
+# Usage:
+#   Start:   docker compose up -d
+#   Stop:    docker compose down
+#   Rebuild: docker compose up --build -d
+#   Logs:    docker compose logs -f
+
+version: '3.8'
+
+services:
+
+  # ── Service 1: Flask Backend API ──────────────────────────────────────────
+  api:
+    build: ./api                        # Build from ./api/Dockerfile
+    container_name: flask-api
+    restart: always                     # Auto-restart on crash or reboot
+    ports:
+      - '5000:5000'                     # localhost:5000 → container:5000
+    environment:
+      - FLASK_ENV=development           # Change to 'production' for live deployment
+    volumes:
+      - ./api:/app                      # Live code sync (dev only — remove in production)
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ── Service 2: nginx Frontend ─────────────────────────────────────────────
+  frontend:
+    image: nginx:alpine                 # Official nginx image — no Dockerfile needed
+    container_name: frontend
+    restart: always
+    ports:
+      - '8080:80'                       # localhost:8080 → container:80
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro   # Mount HTML files (read-only)
+    networks:
+      - app-network
+    depends_on:
+      api:
+        condition: service_healthy      # Wait for Flask to pass healthcheck first
+
+# ── Networks ──────────────────────────────────────────────────────────────────
+networks:
+  app-network:
+    driver: bridge                      # Containers talk to each other by service name
+                                        # e.g. frontend can reach http://api:5000
+
+# ── How containers communicate ────────────────────────────────────────────────
+# From inside the frontend container: http://api:5000/api/students
+# From your browser on the host:      http://localhost:5000/api/students
+#                                     http://localhost:8080

@@ -1,0 +1,67 @@
+# .dockerignore
+# Tells Docker what to EXCLUDE when copying files into the image (COPY . .)
+# Smaller image = faster builds, less bloat, no secrets leaked
+
+# ── Python cache ──────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+venv/
+env/
+.venv/
+.env/
+ENV/
+
+# ── Environment / secrets ─────────────────────────────────────────────────────
+.env
+.env.*
+*.pem
+*.key
+secrets/
+
+# ── Git ───────────────────────────────────────────────────────────────────────
+.git/
+.gitignore
+.gitattributes
+
+# ── GitHub Actions ────────────────────────────────────────────────────────────
+.github/
+
+# ── Docker files (no need inside the image) ───────────────────────────────────
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# ── Tests (not needed in production image) ────────────────────────────────────
+test_*.py
+*_test.py
+tests/
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── OS junk ───────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editor / IDE ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Node (if any frontend tooling) ───────────────────────────────────────────
+node_modules/
+npm-debug.log
+
+# ── Markdown / docs ───────────────────────────────────────────────────────────
+README.md
+*.md
+docs/
